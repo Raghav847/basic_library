@@ -1,41 +1,53 @@
+//let myLibrary = []
 
-let myLibrary = []
-
-function Book(title, author, pages, read) {
-    //constructor
-    this.id = crypto.randomUUID();
-    this.title = title;
-    this.author = author;
-    this.pages = Number(pages);
-    this.read = Boolean(read);
-};
-
-Book.prototype.toggleRead = function () {
-    this.read = !this.read;
-};
-
-function addBookToLibrary(title, author, pages, read) {
-    const book = new Book(title, author, pages, read);
-    myLibrary.push(book);
-    renderLibrary();
-};
-
-function removeBookById(id) {
-    myLibrary = myLibrary.filter((book) => book.id !== id)
-}
-
-function toggleReadById(id) {
-    const book = myLibrary.find((book) => book.id === id)
-    if (book) {
-        book.read = !book.read;
+class Book {
+    constructor(title, author, pages, read) {
+        this.id = crypto.randomUUID();
+        this.title = title;
+        this.author = author;
+        this.pages = Number(pages);
+        this.read = Boolean(read);
+    }
+    toggleRead() {
+        this.read = !this.read;
     }
 }
 
-function renderLibrary() {
-    const library = document.querySelector("#library");
-    library.innerHTML = "";
+class Library {
+    constructor() {
+        this.books = [];
+    }
 
-    myLibrary.forEach((book) => {
+    addBook(title, author, pages, read) {
+        const book = new Book(title, author, pages, read);
+        this.books.push(book);
+        this.render();
+    }
+
+    removeBookById(id) {
+        this.books = this.books.filter((book) => book.id !== id);
+        this.render();
+    }
+
+    toggleReadById(id) {
+        const book = this.books.find((book) => book.id === id);
+        if (book) {
+            book.toggleRead();
+            this.render();
+        }
+    }
+
+    render() {
+        const libraryEl = document.querySelector("#library");
+        libraryEl.innerHTML = "";
+
+        this.books.forEach((book) => {
+            const card = this.createBookCard(book);
+            libraryEl.appendChild(card);
+        });
+    }
+
+    createBookCard(book) {
         const card = document.createElement("article");
         card.classList.add("book-card");
         card.dataset.id = book.id;
@@ -62,34 +74,32 @@ function renderLibrary() {
         const toggleBtn = document.createElement("button");
         toggleBtn.textContent = "Toggle Read";
         toggleBtn.dataset.id = book.id;
-
         toggleBtn.addEventListener("click", () => {
-            book.toggleRead();
-            renderLibrary();
+            this.toggleReadById(book.id);
         });
 
         const removeBtn = document.createElement("button");
         removeBtn.textContent = "Remove";
         removeBtn.dataset.id = book.id;
-
         removeBtn.addEventListener("click", () => {
-            removeBookById(book.id);
-            renderLibrary();
+            this.removeBookById(book.id);
         });
 
         actions.append(toggleBtn, removeBtn);
         card.append(titleEl, authorEl, pagesEl, readEl, actions);
-        library.appendChild(card);
-    });
+
+        return card;
+    }
 }
 
-addBookToLibrary("The Hobbit", "J.R.R. Tolkien", 310, true);
-addBookToLibrary("Clean Code", "Robert C. Martin", 464, false);
+const myLibrary = new Library();
+
+myLibrary.addBook("The Hobbit", "J.R.R. Tolkien", 310, true);
+myLibrary.addBook("Clean Code", "Robert C. Martin", 464, false);
 
 const newBookBtn = document.querySelector("#newBookBtn");
 const dialog = document.querySelector("#bookDialog");
 const form = document.querySelector("#bookForm");
-
 const cancelBtn = document.querySelector("#cancelBtn");
 const closeDialogBtn = document.querySelector("#closeDialogBtn");
 
@@ -103,9 +113,8 @@ form.addEventListener("submit", (event) => {
     const author = event.target.author.value.trim();
     const pages = Number(event.target.pages.value);
     const read = event.target.read.checked;
-
-    addBookToLibrary(title, author, pages, read);
-
+    
+    myLibrary.addBook(title, author, pages, read);
     form.reset();
     dialog.close();
 });
@@ -118,4 +127,4 @@ cancelBtn.addEventListener("click", () => {
 closeDialogBtn.addEventListener("click", () => {
     form.reset();
     dialog.close();
-})
+});
