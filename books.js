@@ -109,11 +109,41 @@ newBookBtn.addEventListener("click", () => {
 
 form.addEventListener("submit", (event) => {
     event.preventDefault();
-    const title = event.target.title.value.trim();
-    const author = event.target.author.value.trim();
-    const pages = Number(event.target.pages.value);
-    const read = event.target.read.checked;
+    const titleInput = event.target.elements.title;
+    const authorInput = event.target.elements.author;
+    const pagesInput = event.target.elements.pages;
+
+    titleInput.setCustomValidity("");
+    authorInput.setCustomValidity("");
+    pagesInput.setCustomValidity("");
     
+    const title = titleInput.value.trim();
+    const author = authorInput.value.trim();
+    const pagesRaw = pagesInput.value.trim();
+
+    if (!title) {
+        titleInput.setCustomValidity("The book title must be filled!");
+        titleInput.reportValidity();
+        titleInput.focus();
+        return;
+    }
+
+    if (!author) {
+        authorInput.setCustomValidity("The author name must be filled!");
+        authorInput.reportValidity();
+        authorInput.focus();
+        return;
+    }
+
+    const pages = Number(pagesRaw);
+    if (!pagesRaw || !Number.isFinite(pages) || pages < 1) {
+        pagesInput.setCustomValidity("The page count must be at least 1!");
+        pagesInput.reportValidity();
+        pagesInput.focus();
+        return;
+    }
+
+    const read = event.target.elements.read.checked;
     myLibrary.addBook(title, author, pages, read);
     form.reset();
     dialog.close();
@@ -122,6 +152,13 @@ form.addEventListener("submit", (event) => {
 cancelBtn.addEventListener("click", () => {
     form.reset();
     dialog.close();
+});
+
+["title", "author", "pages"].forEach((name) => {
+    const input = form.elements[name];
+    input.addEventListener("input", () => {
+        input.setCustomValidity("");
+    });
 });
 
 closeDialogBtn.addEventListener("click", () => {
